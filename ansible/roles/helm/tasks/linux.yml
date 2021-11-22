@@ -1,0 +1,29 @@
+---
+
+
+# Install Helm CLI
+
+- name: Add app key for helm repo
+  apt_key:
+    url: https://baltocdn.com/helm/signing.asc
+    state: present
+
+- name: Install helm dependencies
+  apt:
+    name: apt-transport-https
+    state: present
+
+- name: Add helm repo in repo list
+  shell: echo "deb https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install Helm 
+  apt:
+    name: helm
+    state: present
+
+- name: Helm set up bash-completion
+  shell: helm completion bash > /etc/bash_completion.d/helm

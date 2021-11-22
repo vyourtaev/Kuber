@@ -1,0 +1,53 @@
+---
+
+#- name: Download minikube binaries
+#  shell: "curl -L -o {{ minikube_tmp_dir }}/minikube-linux-amd64  https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"
+#  failed_when: false
+#  changed_when: false
+
+- name: Download minikube binary
+  get_url: 
+    url: "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"
+    dest: "{{ minikube_tmp_dir }}/minikube-linux-amd64"
+      #    checksum: "sha256:https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"
+
+- name: Install minikube
+  shell: "install {{ minikube_tmp_dir }}/minikube-linux-amd64  {{ minikube_install_dir }}/minikube"
+
+- name: Enable minikube-completition
+  shell: minikube completion bash > /etc/bash_completion.d/minikube
+  failed_when: false
+  changed_when: false
+
+- name: Install minikube-init script
+  template:
+    src: minikube-init.sh.j2
+    dest: "{{ minikube_install_dir }}/minikube-init.sh"
+    mode: "0755"
+
+# On Ubuntu or Debian hosts, You may see messages similar to the following when working with an image.
+# WARNING: Your kernel does not support swap limit capabilities. Limitation discarded.
+# If you don’t need these capabilities, you can ignore the warning. You can enable these capabilities 
+# on Ubuntu or Debian by following these instructions. Memory and swap accounting incur an overhead of 
+# about 1% of the total available memory and a 10% overall performance degradation, even if Docker is not running.
+#
+- name: Enable cgroup swap limit capabilities
+  lineinfile:
+    line: GRUB_CMDLINE_LINUX="cgroup_enable=memory swapaccount=1"
+    dest: "/etc/default/grub"
+    regexp: '^GRUB_CMDLINE_LINUX='
+    state: present
+    create: True
+
+# Update GRUB.
+# The changes take effect when the system is rebooted.
+#
+- name: Update-grub
+  shell: update-grub
+  register: result
+
+- name: GRUB updated
+  debug:
+    msg: GRUB configuration /etc/default/grup updated, reboot required
+  when: result
+

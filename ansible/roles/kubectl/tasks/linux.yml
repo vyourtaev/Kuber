@@ -1,0 +1,53 @@
+---
+
+- name: Install packages to allow apt works over HTTPS
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+
+- name: Kubectl |  APT | Check GPG Key 
+  shell: curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+  failed_when: false
+  changed_when: false
+
+- name: Added Kubenetes repository template
+  template:
+    src: kubernetes.list.j2
+    dest: /etc/apt/sources.list.d/kubernetes.list
+
+- name: Install kubectl tool 
+  apt: 
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - kubectl
+    - bash-completion
+
+- name: Enable kubect-completition
+  shell: kubectl completion bash >/etc/bash_completion.d/kubectl
+  failed_when: false
+  changed_when: false
+
+- name: Setup kubectl alias
+  become: no
+  lineinfile:
+    line: "alias k=kubectl"
+    dest: "~/.bash_aliases"
+    state: present
+    insertafter: EOF
+    create: True
+
+- name: Enable kubectl alias for kubectl-completion
+  become: no
+  lineinfile:
+    line: "complete -F __start_kubectl k"
+    dest: "~/.bashrc"
+    state: present
+    insertafter: EOF
+    create: True

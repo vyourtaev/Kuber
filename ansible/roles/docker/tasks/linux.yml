@@ -1,0 +1,57 @@
+---
+
+# install docker 
+# "ansible_distribution": "Ubuntu"
+# "ansible_system": "Linux"
+# "ansible_os_family": "Debian"
+# "ansible_nodename": "solaris"
+# "ansible_machine": "x86_64"
+# "ansible_lsb": {
+#            "codename": "impish",
+#            "description": "Ubuntu 21.10",
+#            "id": "Ubuntu",
+#            "major_release": "21",
+#            "release": "21.10"
+#        }
+
+- name: Uninstall old docker
+  apt:
+    name: "{{ item }}"
+    state: absent
+  with_items: 
+    - docker
+    - docker.io
+    - docker-engine
+    - containerd
+    - runc
+
+- name: Install packages to allow apt works over HTTPS
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - ca-certificates
+    - curl
+    - gnupg
+    - lsb-release
+
+- name: Docker | CE | APT | Check GPG Key 
+  shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor --yes -o /usr/share/keyrings/docker-archive-keyring.gpg
+  failed_when: false
+  changed_when: false
+
+- name: Added docker repository template
+  template:
+    src: docker.list.j2
+    dest: /etc/apt/sources.list.d/docker.list
+
+- name: Install docker 
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io

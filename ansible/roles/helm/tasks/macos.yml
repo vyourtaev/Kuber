@@ -1,0 +1,12 @@
+---
+
+# Install Helm CLI on MacOs
+#
+
+- name: Install Helm
+  homebrew:
+    name: helm
+    stage: present
+
+- name: Helm set up bash-completion
+  shell: helm completion bash > /etc/bash_completion.d/helm

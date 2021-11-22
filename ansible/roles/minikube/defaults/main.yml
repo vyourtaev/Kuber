@@ -1,0 +1,5 @@
+---
+# defaults file for minkube
+minikube_tmp_dir: /tmp
+minikube_install_dir: /usr/local/bin
+
